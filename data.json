@@ -1,0 +1,106 @@
+{
+  "expenses": [
+    {
+      "id": "sample-food",
+      "amount": 4000,
+      "category": "Food",
+      "description": "Groceries and meals",
+      "date": "2026-10-01T09:00:00.000Z"
+    },
+    {
+      "id": "sample-transport",
+      "amount": 1500,
+      "category": "Transport",
+      "description": "Travel and commuting",
+      "date": "2026-10-02T09:00:00.000Z"
+    },
+    {
+      "id": "sample-shopping",
+      "amount": 2000,
+      "category": "Shopping",
+      "description": "Household shopping",
+      "date": "2026-10-03T09:00:00.000Z"
+    },
+    {
+      "id": "expense-1792092788677-poscsq",
+      "amount": 60,
+      "category": "Lunch",
+      "description": "1 AM Lunch",
+      "date": "2026-10-15T19:33:08.678Z"
+    }
+  ],
+  "budgetTips": [
+    {
+      "title": "Plan food spending",
+      "keywords": [
+        "food",
+        "groceries",
+        "meal",
+        "eating",
+        "restaurant",
+        "lunch",
+        "dinner"
+      ],
+      "text": "Plan meals for the week and make a shopping list before buying groceries. Compare the food total with your own previous weeks, and set a weekly limit that still leaves room for occasional meals out."
+    },
+    {
+      "title": "Review transport costs",
+      "keywords": [
+        "transport",
+        "travel",
+        "commute",
+        "fuel",
+        "taxi",
+        "bus",
+        "train"
+      ],
+      "text": "Group errands into fewer trips and compare the cost of public transport, carpooling, and driving for your regular routes. Track the actual costs for a few weeks before deciding what to change."
+    },
+    {
+      "title": "Pause before shopping",
+      "keywords": [
+        "shopping",
+        "buy",
+        "purchase",
+        "retail",
+        "impulse"
+      ],
+      "text": "Keep a short wish list and wait 24 hours before non-essential purchases. A planned monthly shopping amount can help separate needs from impulse buys."
+    },
+    {
+      "title": "Build a realistic budget",
+      "keywords": [
+        "budget",
+        "plan",
+        "monthly",
+        "spending",
+        "category"
+      ],
+      "text": "Start with your recorded income and essential bills, then review actual spending by category. Set flexible category limits based on your own recent totals, and adjust them monthly rather than relying on a one-size-fits-all percentage."
+    },
+    {
+      "title": "Set a savings target",
+      "keywords": [
+        "save",
+        "saving",
+        "savings",
+        "goal",
+        "reduce",
+        "cut",
+        "₹1000"
+      ],
+      "text": "Choose a specific savings target and divide it by the number of weeks or pay periods remaining. Look for small, repeatable reductions in flexible spending, track the amount actually saved, and avoid cutting essentials."
+    },
+    {
+      "title": "Find recurring expenses",
+      "keywords": [
+        "subscription",
+        "recurring",
+        "monthly",
+        "bills",
+        "cancel"
+      ],
+      "text": "Review recurring bills and subscriptions. Cancel services you no longer use, compare plans, and check cancellation terms before changing anything."
+    }
+  ]
+}

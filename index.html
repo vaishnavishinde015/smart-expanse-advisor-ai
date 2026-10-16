@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f7fb">
+  <title>Smart Expense Advisor AI</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <main class="page">
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">YOUR PERSONAL MONEY COMPANION</p>
+        <h1>Smart Expense Advisor AI</h1>
+        <p class="subtitle">Understand your spending and make a plan that works for you.</p>
+      </div>
+      <span class="status-badge"><span class="status-dot"></span> Your data stays local</span>
+    </header>
+
+    <section class="summary-grid" aria-label="Expense summary">
+      <article class="card total-card">
+        <p class="card-label">TOTAL SPENDING</p>
+        <p class="total-amount" id="total-spending" aria-live="polite">Loading…</p>
+        <p class="muted" id="expense-count">Loading expenses…</p>
+      </article>
+      <article class="card categories-card">
+        <div class="section-heading">
+          <div>
+            <p class="card-label">SPENDING BREAKDOWN</p>
+            <h2>By category</h2>
+          </div>
+        </div>
+        <div id="category-summary" class="category-list" aria-live="polite"></div>
+      </article>
+    </section>
+
+    <section class="content-grid">
+      <article class="card expenses-card">
+        <div class="section-heading">
+          <div>
+            <p class="card-label">TRACK YOUR MONEY</p>
+            <h2>Add an expense</h2>
+          </div>
+        </div>
+        <form id="expense-form" class="expense-form">
+          <label>
+            Amount (₹)
+            <input id="amount" name="amount" type="number" min="0.01" step="0.01" placeholder="e.g. 250" required>
+          </label>
+          <label>
+            Category
+            <input id="category" name="category" type="text" maxlength="60" placeholder="e.g. Food" required>
+          </label>
+          <label>
+            Description
+            <input id="description" name="description" type="text" maxlength="200" placeholder="e.g. Lunch with a friend" required>
+          </label>
+          <button class="primary-button" type="submit">Add expense</button>
+          <p id="expense-message" class="form-message" role="status"></p>
+        </form>
+
+        <div class="list-heading">
+          <h2>Recent expenses</h2>
+          <span id="list-count" class="muted"></span>
+        </div>
+        <div id="expense-list" class="expense-list" aria-live="polite"></div>
+      </article>
+
+      <article class="card advisor-card">
+        <div class="section-heading">
+          <div>
+            <p class="card-label">ASK YOUR MONEY ADVISOR</p>
+            <h2>Expense assistant</h2>
+          </div>
+          <span class="ai-mark" aria-hidden="true">AI</span>
+        </div>
+        <p class="muted assistant-intro">Ask about your spending, set a saving goal, or get practical budgeting tips.</p>
+        <div class="suggestions" aria-label="Sample questions">
+          <button type="button" class="suggestion">Where am I spending the most?</button>
+          <button type="button" class="suggestion">How can I save ₹1,000 next month?</button>
+          <button type="button" class="suggestion">Calculate my total food expenses.</button>
+        </div>
+        <div id="chat-messages" class="chat-messages" aria-live="polite" aria-label="Conversation">
+          <div class="message assistant-message">
+            <span class="message-label">ADVISOR</span>
+            <p>Hello! I can analyze the expenses saved on this device and share practical budgeting ideas. What would you like to know?</p>
+          </div>
+        </div>
+        <form id="chat-form" class="chat-form">
+          <label class="visually-hidden" for="question">Your question</label>
+          <textarea id="question" name="question" rows="2" maxlength="1000" placeholder="Ask a question about your expenses…" required></textarea>
+          <button class="primary-button send-button" type="submit">Ask advisor <span aria-hidden="true">→</span></button>
+        </form>
+        <p class="disclaimer">For general budgeting education only, not professional financial advice.</p>
+      </article>
+    </section>
+    <footer>Simple spending insights, powered by your own expense data.</footer>
+  </main>
+
+  <script>
+    const currency = new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 2
+    });
+
+    async function apiRequest(path, options = {}) {
+      const response = await fetch(path, {
+        headers: { "Content-Type": "application/json" },
+        ...options
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || "The request could not be completed.");
+      }
+      return result;
+    }
+
+    function addExpenseRow(expense) {
+      const row = document.createElement("div");
+      row.className = "expense-row";
+
+      const icon = document.createElement("span");
+      icon.className = "expense-icon";
+      icon.textContent = expense.category.trim().charAt(0).toUpperCase();
+
+      const details = document.createElement("div");
+      details.className = "expense-details";
+      const description = document.createElement("strong");
+      description.textContent = expense.description;
+      const category = document.createElement("span");
+      category.textContent = expense.category;
+      details.append(description, category);
+
+      const amount = document.createElement("strong");
+      amount.className = "expense-amount";
+      amount.textContent = currency.format(expense.amount);
+      row.append(icon, details, amount);
+      return row;
+    }
+
+    function renderSummary(summary) {
+      document.getElementById("total-spending").textContent = currency.format(summary.total);
+      document.getElementById("expense-count").textContent =
+        `${summary.expenses.length} expense${summary.expenses.length === 1 ? "" : "s"} recorded`;
+      document.getElementById("list-count").textContent =
+        `${summary.expenses.length} item${summary.expenses.length === 1 ? "" : "s"}`;
+
+      const list = document.getElementById("expense-list");
+      list.replaceChildren();
+      if (summary.expenses.length === 0) {
+        const empty = document.createElement("p");
+        empty.className = "empty-state";
+        empty.textContent = "No expenses yet. Add one above to get started.";
+        list.append(empty);
+      } else {
+        [...summary.expenses].reverse().forEach((expense) => list.append(addExpenseRow(expense)));
+      }
+
+      const categories = document.getElementById("category-summary");
+      categories.replaceChildren();
+      const entries = Object.entries(summary.categories).sort((a, b) => b[1] - a[1]);
+      if (entries.length === 0) {
+        const empty = document.createElement("p");
+        empty.className = "empty-state";
+        empty.textContent = "Category totals will appear when you add expenses.";
+        categories.append(empty);
+        return;
+      }
+
+      entries.forEach(([name, total]) => {
+        const row = document.createElement("div");
+        row.className = "category-row";
+        const label = document.createElement("span");
+        label.textContent = name;
+        const amount = document.createElement("strong");
+        amount.textContent = currency.format(total);
+        row.append(label, amount);
+        categories.append(row);
+      });
+    }
+
+    async function loadSummary() {
+      renderSummary(await apiRequest("/api/summary"));
+    }
+
+    document.getElementById("expense-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const message = document.getElementById("expense-message");
+      const button = form.querySelector("button");
+      message.textContent = "";
+      button.disabled = true;
+      try {
+        await apiRequest("/api/expenses", {
+          method: "POST",
+          body: JSON.stringify({
+            amount: document.getElementById("amount").value,
+            category: document.getElementById("category").value,
+            description: document.getElementById("description").value
+          })
+        });
+        form.reset();
+        await loadSummary();
+        message.textContent = "Expense saved.";
+      } catch (error) {
+        message.textContent = error.message;
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    function appendInlineMarkdown(container, text) {
+      const pattern = /\*\*([^*]+)\*\*|__([^_]+)__|`([^`]+)`|\*([^*]+)\*/g;
+      let lastIndex = 0;
+      for (const match of text.matchAll(pattern)) {
+        container.append(document.createTextNode(text.slice(lastIndex, match.index)));
+        const element = document.createElement(match[3] ? "code" : match[4] ? "em" : "strong");
+        element.textContent = match[1] || match[2] || match[3] || match[4];
+        container.append(element);
+        lastIndex = match.index + match[0].length;
+      }
+      container.append(document.createTextNode(text.slice(lastIndex)));
+    }
+
+    function parseTableRow(line) {
+      return line.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map((cell) => cell.trim());
+    }
+
+    function renderAssistantMarkdown(container, text) {
+      const lines = text.trim().split(/\r?\n/);
+      let index = 0;
+
+      while (index < lines.length) {
+        const line = lines[index].trim();
+        if (!line) {
+          index++;
+          continue;
+        }
+
+        if (
+          line.includes("|") &&
+          index + 1 < lines.length &&
+          /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(lines[index + 1])
+        ) {
+          const table = document.createElement("table");
+          table.className = "assistant-table";
+          const head = document.createElement("thead");
+          const headerRow = document.createElement("tr");
+          parseTableRow(line).forEach((cell) => {
+            const header = document.createElement("th");
+            appendInlineMarkdown(header, cell);
+            headerRow.append(header);
+          });
+          head.append(headerRow);
+          table.append(head);
+
+          const body = document.createElement("tbody");
+          index += 2;
+          while (index < lines.length && lines[index].includes("|")) {
+            const row = document.createElement("tr");
+            parseTableRow(lines[index]).forEach((cell) => {
+              const value = document.createElement("td");
+              appendInlineMarkdown(value, cell);
+              row.append(value);
+            });
+            body.append(row);
+            index++;
+          }
+          table.append(body);
+          const wrapper = document.createElement("div");
+          wrapper.className = "message-table-wrap";
+          wrapper.append(table);
+          container.append(wrapper);
+          continue;
+        }
+
+        const heading = line.match(/^#{1,3}\s+(.+)$/);
+        if (heading) {
+          const element = document.createElement("h3");
+          appendInlineMarkdown(element, heading[1]);
+          container.append(element);
+          index++;
+          continue;
+        }
+
+        const listItem = line.match(/^([-*]|\d+[.)])\s+(.+)$/);
+        if (listItem) {
+          const ordered = /^\d/.test(listItem[1]);
+          const list = document.createElement(ordered ? "ol" : "ul");
+          while (index < lines.length) {
+            const item = lines[index].trim().match(/^([-*]|\d+[.)])\s+(.+)$/);
+            if (!item || /^\d/.test(item[1]) !== ordered) break;
+            const element = document.createElement("li");
+            appendInlineMarkdown(element, item[2]);
+            list.append(element);
+            index++;
+          }
+          container.append(list);
+          continue;
+        }
+
+        const paragraphLines = [];
+        while (
+          index < lines.length &&
+          lines[index].trim() &&
+          !/^#{1,3}\s+/.test(lines[index].trim()) &&
+          !/^([-*]|\d+[.)])\s+/.test(lines[index].trim()) &&
+          !(lines[index].includes("|") && index + 1 < lines.length &&
+            /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(lines[index + 1]))
+        ) {
+          paragraphLines.push(lines[index].trim());
+          index++;
+        }
+        const paragraph = document.createElement("p");
+        appendInlineMarkdown(paragraph, paragraphLines.join(" "));
+        container.append(paragraph);
+      }
+    }
+
+    function addChatMessage(text, role) {
+      const message = document.createElement("div");
+      message.className = `message ${role}-message`;
+      const label = document.createElement("span");
+      label.className = "message-label";
+      label.textContent = role === "user" ? "YOU" : "ADVISOR";
+      const content = document.createElement("div");
+      content.className = "message-content";
+      if (role === "assistant") {
+        renderAssistantMarkdown(content, text);
+      } else {
+        content.textContent = text;
+      }
+      message.append(label, content);
+      document.getElementById("chat-messages").append(message);
+      message.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      return message;
+    }
+
+    async function askAdvisor(question) {
+      addChatMessage(question, "user");
+      const loading = addChatMessage("Checking your expenses and useful budgeting tips…", "assistant");
+      loading.classList.add("loading-message");
+      const button = document.querySelector("#chat-form button");
+      button.disabled = true;
+      try {
+        const result = await apiRequest("/api/chat", {
+          method: "POST",
+          body: JSON.stringify({ question })
+        });
+        const content = loading.querySelector(".message-content");
+        content.replaceChildren();
+        renderAssistantMarkdown(content, result.answer);
+        loading.classList.remove("loading-message");
+      } catch (error) {
+        loading.querySelector(".message-content").textContent = `Sorry, I couldn't answer that: ${error.message}`;
+        loading.classList.remove("loading-message");
+        loading.classList.add("error-message");
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    document.getElementById("chat-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const input = document.getElementById("question");
+      const question = input.value.trim();
+      if (!question) return;
+      input.value = "";
+      await askAdvisor(question);
+    });
+
+    document.querySelectorAll(".suggestion").forEach((button) => {
+      button.addEventListener("click", () => askAdvisor(button.textContent));
+    });
+
+    loadSummary().catch((error) => {
+      document.getElementById("total-spending").textContent = "Unavailable";
+      document.getElementById("expense-count").textContent = error.message;
+    });
+  </script>
+</body>
+</html>

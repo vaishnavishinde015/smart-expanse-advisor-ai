@@ -1,0 +1,15 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run Smart Expense Advisor",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"start"
+			],
+			"isBackground": true,
+			"problemMatcher": []
+		}
+	]
+}
