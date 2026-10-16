@@ -2,10 +2,22 @@
 
 A local expense tracker with an AI budgeting assistant. Expenses are stored in `data.json` on your computer. The assistant uses OpenRouter to answer questions about your expenses and budgeting.
 
+**GitHub repository:** [vaishnavishinde015/smart-expanse-advisor-ai](https://github.com/vaishnavishinde015/smart-expanse-advisor-ai)
+
+## Tech stack
+
+| Area | Technology |
+| --- | --- |
+| Frontend | HTML, CSS, and vanilla JavaScript |
+| Backend | Node.js 20+ and Express 5 |
+| AI assistant | OpenRouter API |
+| Local AI tools | Model Context Protocol (MCP) SDK |
+| Data storage | Local `data.json` file |
+| Package management | npm |
+
 ## Requirements
 
 - Node.js 20 or newer (npm is included with Node.js)
-- A GitHub repository URL for this project
 - An OpenRouter account and API key to use the AI chat feature (optional; expense tracking works without it)
 
 ## 1. Download the project from GitHub
@@ -14,10 +26,10 @@ Install Git if it is not already installed, then open PowerShell or a terminal a
 
 ```powershell
 git clone https://github.com/vaishnavishinde015/smart-expanse-advisor-ai.git
-cd REPOSITORY
+cd smart-expanse-advisor-ai
 ```
 
-Replace `OWNER/REPOSITORY` with the project’s actual GitHub owner and repository name, and replace `REPOSITORY` with the folder created by the clone. Alternatively, use the repository’s **Code → Download ZIP** option on GitHub, extract the ZIP, and open a terminal in the extracted project folder.
+Alternatively, use the repository’s [**Code → Download ZIP**](https://github.com/vaishnavishinde015/smart-expanse-advisor-ai) option on GitHub, extract the ZIP, and open a terminal in the extracted project folder.
 
 ## 2. Install Node.js
 
