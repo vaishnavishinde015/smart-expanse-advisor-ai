@@ -1,6 +1,6 @@
 # Smart Expense Advisor AI
 
-A local expense tracker with an AI budgeting assistant. Expenses are stored in `data.json` on your computer. The assistant uses OpenRouter to answer questions about your expenses and budgeting.
+A local expense tracker with an AI budgeting assistant. Run it locally with Express and local `data.json` storage, or deploy it to Netlify with serverless functions and Netlify Blobs.
 
 **GitHub repository:** [vaishnavishinde015/smart-expanse-advisor-ai](https://github.com/vaishnavishinde015/smart-expanse-advisor-ai)
 
@@ -9,10 +9,12 @@ A local expense tracker with an AI budgeting assistant. Expenses are stored in `
 | Area | Technology |
 | --- | --- |
 | Frontend | HTML, CSS, and vanilla JavaScript |
-| Backend | Node.js 20+ and Express 5 |
+| Local backend | Node.js 20+ and Express 5 |
+| Netlify backend | Netlify Functions (Node.js 22) |
 | AI assistant | OpenRouter API |
 | Local AI tools | Model Context Protocol (MCP) SDK |
-| Data storage | Local `data.json` file |
+| Local data storage | `data.json` file |
+| Netlify data storage | Netlify Blobs, isolated per browser |
 | Package management | npm |
 
 ## Requirements
@@ -40,7 +42,7 @@ node --version
 npm --version
 ```
 
-The Node.js version must be `v20` or higher.
+Use Node.js 20 or newer for local development. Netlify is configured to use Node.js 22.
 
 ## 3. Install project dependencies
 
@@ -86,12 +88,22 @@ When startup succeeds, the terminal reports that the app is running and that it 
 
 To stop the server, focus the terminal running it and press **Ctrl+C**.
 
+## Deploy to Netlify
+
+1. Push this repository to GitHub and import it in Netlify. Select the `main` branch.
+2. Leave the base directory empty. The included `netlify.toml` configures the build command, publish directory, and functions directory.
+3. In Netlify, open **Project configuration → Environment variables** and add `OPENROUTER_API_KEY` with your newly created OpenRouter key. Never put the key in frontend code or commit it to GitHub.
+4. Trigger a deploy. Netlify builds the static frontend into `dist` and publishes the API functions. The `/api/summary`, `/api/expenses`, and `/api/chat` routes are routed to those functions.
+5. Visit the deployed site and add an expense. The first API request creates a private, random browser session; expenses are stored in Netlify Blobs for that browser.
+
+The Netlify version starts with an empty expense list; it does not import records from `data.json`. Data is scoped to the browser's HttpOnly cookie. Clearing site cookies or using another browser creates a different expense list, so this is not an account-based sync or backup system. Do not use it for sensitive financial records without adding authenticated accounts and backups.
+
 ## Data and privacy
 
-- Expense records are kept in the local `data.json` file.
-- The API key stays in the server-side `.env` file and is not included in browser code.
+- When run locally, expense records are kept in the local `data.json` file. On Netlify, they are stored in Netlify Blobs and separated by a random, HttpOnly browser cookie.
+- The API key stays in the server-side `.env` file locally or in Netlify environment variables after deployment; it is not included in browser code.
 - When you ask the AI advisor a question, the app sends the question and, when needed to answer it, relevant expense/tool results to OpenRouter. Do not use the chat feature with sensitive information unless you are comfortable sending it to that service.
-- Back up `data.json` if you want to preserve your expense history when moving or reinstalling the project.
+- Back up `data.json` if you want to preserve your local expense history when moving or reinstalling the project.
 
 ## Troubleshooting
 
@@ -107,3 +119,5 @@ To stop the server, focus the terminal running it and press **Ctrl+C**.
 - **AI chat reports a missing key:** Check that `.env` is in the project root, the variable is named exactly `OPENROUTER_API_KEY`, and restart the server after editing it.
 - **OpenRouter returns an error:** Verify the key is valid and active, your account has any required credits, and the account can access the configured model.
 - **The app cannot read expense data:** Check that `data.json` exists and contains valid JSON with `expenses` and `budgetTips` arrays. Restore it from a backup if it was damaged.
+- **Netlify reports `/api/...` as 404:** Confirm the deploy is built from this repository's latest `main` commit and that Netlify is using the repository's `netlify.toml`. Trigger a fresh deploy after pushing configuration changes.
+- **Netlify AI chat reports a missing key:** Add `OPENROUTER_API_KEY` in the Netlify project's environment variables, then trigger a new deploy.
